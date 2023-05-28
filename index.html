@@ -1,0 +1,137 @@
+<html>
+    <head>
+
+    </head>
+    <body>
+        <div>
+            <p id="current_date">현재 날짜</p>
+        </div>
+        <div>
+            <p>이벤트
+                <select name="events" id="events" onchange="selectEvent()">
+                    <option value="2023-06-15" originium="30">브레이크 디 아이스 (재개방)</option>
+                    <option value="2023-06-29" originium="29">왓 더 파이어라이트 캐스츠(힐리드)</option>
+                    <option value="2023-07-15" originium="100">새해</option>
+                    <option value="2023-07-31" originium="28">장진주 (재개방)</option>
+                    <option value="2023-08-07" originium="28">등림의 (총웨)</option>
+                    <option value="2023-08-28" originium="18">춘분 (치우바이)</option>
+                    <option value="2023-09-07" originium="27">가이딩 어헤드 (재개방)</option>
+                    <option value="2023-09-28" originium="30">불을 쫓는 낙엽 (특야토)</option>
+                </select>
+            </p>
+            <p id="event_date">예상 날짜</p>
+        </div>
+        <div>
+            <p>현재 보유량</p>
+            <ui>
+                <li><b>오리지늄</b><input class="current" id="originium" type="number" onchange="calculate()"></li>
+                <li><b>합성옥</b><input class="current" id="cube" type="number" onchange="calculate()"></li>
+                <li><b>티켓</b><input class="current" id="ticket" type="number" onchange="calculate()"></li> 
+                <li><b id="current">현재 뽑기량: </b></li>
+            </ui>
+        </div>
+        <div>
+            <p>무료 생성량</p>
+            <ul>
+                <li>출석, 임무 <input id="default" type="checkbox" checked=true onchange="calculate()"/></li>
+                <li>섬멸 <input id="weekly" type="checkbox" checked=true onchange="calculate()"/></li>
+                <li>초티1단계 <input id="green1" type="checkbox" checked=true onchange="calculate()"/></li>
+                <li>초티2단계 <input id="green2" type="checkbox" onchange="calculate()"/></li>
+                <li>노티 <input id="yellow" type="number" onchange="calculate()"/></li>
+            </ul>
+        </div>
+        <div>
+            <p>유료 생성량</p>
+            <ul>
+                <li>먼슬리 <input id="monthly" type="checkbox" checked=true onchange="calculate()"/></li>
+                <li>월간헤헌권 <input id="monthlyTicket" type="number" onchange="calculate()"/></li>
+            </ul>
+        </div>
+        <div>
+            <p id="result">예상뽑기량</p>
+        </div>
+        <div>한정 픽업은 무료 24뽑 추가해야함, 기타 출석 이벤, 점검 보상 등은 제외</div>
+    </body>
+    <script type="text/javascript">
+        currentDate = new Date();
+        year = currentDate.getFullYear();
+        month = currentDate.getMonth() + 1;
+        day = currentDate.getDate();
+        document.getElementById("current_date").innerHTML = "오늘 날짜:" + year + "/" + month + "/" + day;
+
+        let dateDifference = 0;
+        let targetDate = new Date();
+        selectEvent();
+
+        function selectEvent(){
+            targetDate = new Date(document.getElementById("events").value);
+            year = targetDate.getFullYear();
+            month = targetDate.getMonth() + 1;
+            day = targetDate.getDate();
+            document.getElementById("event_date").innerHTML = "예상 날짜:" + year + "/" + month + "/" + day;
+
+            var millisecondsPerDay = 1000 * 60 * 60 * 24;
+            var millisBetween = targetDate - currentDate;
+            var days = millisBetween / millisecondsPerDay;
+
+            dateDifference = Math.floor(days);
+            calculate();
+        }
+
+        function calculate(){
+            currents = document.getElementsByClassName("current")
+            currentCount = Number(currents[0].value/10*3) + Number(currents[1].value/600) + Number(currents[2].value)
+            document.getElementById("current").innerHTML = "현재 뽑기량: " + currentCount
+            if(dateDifference === 0){
+                return;
+            }
+            defaultCount = 0
+            if(document.getElementById("default").checked){
+                defaultCount = Number(dateDifference/30*1) + dateDifference*100/600 + Number(dateDifference/7)*500/600
+            }
+            weeklyCount = 0
+            if(document.getElementById("weekly").checked){
+                weeklyCount = Number(dateDifference/7)*1800/600
+            }
+            green1Count = 0
+            if(document.getElementById("green1").checked){
+                green1Count = Number(dateDifference/30)*3
+            }
+            green2Count = 0
+            if(document.getElementById("green2").checked){
+                green2Count = Number(dateDifference/30)*2
+            }
+            yellowCount = document.getElementById("yellow").value*38
+            monthlyCount = 0
+            if(document.getElementById("monthly").checked){
+                monthlyCount = dateDifference*200/600 + Number(dateDifference/30)*6/10*3
+            }
+            monthlyTicketCount = document.getElementById("monthlyTicket").value*22.6
+
+            mediumCount = currentCount + defaultCount + weeklyCount + green1Count + green2Count + yellowCount + monthlyCount + monthlyTicketCount
+            
+            miraesis = document.getElementById("events").children
+            resultCount = mediumCount
+            for(let i = 0; i<miraesis.length; i++){
+                miraesiDate = new Date(miraesis[i].value)
+                if(miraesiDate > currentDate && miraesiDate <= targetDate){
+                    resultCount += miraesis[i].attributes.originium.value/10*3
+                }
+            }
+            document.getElementById("events").children[0].attributes.originium.value
+            
+            document.getElementById("result").innerHTML = "최종뽑기량: " + resultCount;
+        }
+        /*
+        출석 한달 뽑기1개
+        일간 임무 합성옥 100개 -> 한달: 3000개 -> 5뽑
+        주간 임무 합성옥 500개 -> 한달: 2000개 -> 3.3뽑
+        섬멸: 합성옥 1800개 -> 한달: 12뽑
+        초티1단계 뽑기3개 -> 3뽑
+        초티2단계 뽑기2개 -> 2뽑
+        노티: 38뽑
+        먼슬리: 오리지늄6개 한달, 매일 합성옥 200개 -> 11.8뽑
+        월헤헌: 오리지늄42, 10뽑 -> 22.6뽑
+        */
+    </script>
+</html>
